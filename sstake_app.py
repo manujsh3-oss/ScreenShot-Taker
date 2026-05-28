@@ -183,6 +183,7 @@ with sync_playwright() as p:
 
 
     for index, row in df.iterrows():
+        print(index, row)
 
         brand = row["Brand"]
         asin_name = row["ASIN Name"]
