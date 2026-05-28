@@ -181,9 +181,11 @@ with sync_playwright() as p:
 
     page = context.new_page()
 
+    print("Columns found:", df.columns.tolist())
 
     for index, row in df.iterrows():
-        print(index, row)
+        print(f"index in df : {index}")
+        print(f"row in df : {row}")
 
         brand = row["Brand"]
         asin_name = row["ASIN Name"]
