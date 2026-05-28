@@ -1,0 +1,59 @@
+name: Screenshot Taker
+
+env:
+  GDRIVE_TOKEN_JSON: ${{ secrets.GDRIVE_TOKEN_JSON }}
+  GDRIVE_CREDENTIALS_JSON: ${{ secrets.GDRIVE_CREDENTIALS_JSON }}
+  GOOGLE_SHEET_URL: ${{ secrets.GOOGLE_SHEET_URL }}
+  GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: '30 0 * * *'
+    - cron: '30 12 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright
+
+      - name: Run Screenshot Script
+        run: python sstake_app.py
+
+      - name: Delete old screenshots
+        run: |
+          find screenshots -type f -mtime +7 -delete
+
+      - name: Commit Screenshots
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+          git add screenshots/
+
+          git commit -m "Automated capture run - $(TZ='Asia/Kolkata' date '+%Y-%m-%d %I:%M %p IST')" || echo "No changes"
+
+          git push
