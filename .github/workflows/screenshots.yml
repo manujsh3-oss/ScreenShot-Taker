@@ -12,7 +12,7 @@ permissions:
 on:
   schedule:
     - cron: '30 0 * * *'
-    - cron: '30 12 * * *'
+    # - cron: '30 12 * * *'
 
   workflow_dispatch:
 
@@ -43,9 +43,9 @@ jobs:
       - name: Run Screenshot Script
         run: python sstake_app.py
 
-      - name: Delete old screenshots
-        run: |
-          find screenshots -type f -mtime +7 -delete
+      # - name: Delete old screenshots
+      #   run: |
+      #     find screenshots -type f -mtime +7 -delete
 
       - name: Commit Screenshots
         run: |
