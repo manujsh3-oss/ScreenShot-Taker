@@ -248,7 +248,8 @@ with sync_playwright() as p:
 
                     capture_time = timestamp()
                     file_name = f"{site_name}_{capture_time}.png"
-                    screenshot_bytes = page.screenshot(full_page=True)
+                    is_amazon = "amazon." in url or "amzn." in url
+                    screenshot_bytes = page.screenshot(full_page=not is_amazon)
                     upload_screenshot_to_drive(drive_service, screenshot_bytes, file_name, subfolder_id)
 
 
