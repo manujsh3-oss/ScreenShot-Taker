@@ -12,7 +12,7 @@ permissions:
 on:
   schedule:
     - cron: '30 0 * * *'
-    # - cron: '30 12 * * *'
+    - cron: '30 12 * * *'
 
   workflow_dispatch:
 
@@ -29,16 +29,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium
-
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
 
       - name: Run Screenshot Script
         run: python sstake_app.py
@@ -47,13 +47,13 @@ jobs:
       #   run: |
       #     find screenshots -type f -mtime +7 -delete
 
-      - name: Commit Screenshots
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+      # - name: Commit Screenshots
+      #   run: |
+      #     git config --global user.name "github-actions"
+      #     git config --global user.email "actions@github.com"
 
-          git add screenshots/
+      #     git add screenshots/
 
-          git commit -m "Automated capture run - $(TZ='Asia/Kolkata' date '+%Y-%m-%d %I:%M %p IST')" || echo "No changes"
+      #     git commit -m "Automated capture run - $(TZ='Asia/Kolkata' date '+%Y-%m-%d %I:%M %p IST')" || echo "No changes"
 
-          git push
+      #     git push
