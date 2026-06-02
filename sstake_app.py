@@ -13,8 +13,21 @@ from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from ssl import SSLEOFError
+
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+def execute_with_retry(request, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            return request.execute()
+        except (SSLEOFError, Exception) as e:
+            if attempt < retries - 1:
+                print(f"API call failed ({e}), retrying in {delay}s...")
+                time.sleep(delay)
+            else:
+                raise
 
 def get_drive_service():
     creds = None
@@ -122,24 +135,22 @@ def timestamp():
 
 
 def get_or_create_subfolder(service, folder_name, parent_id):
-    """Returns the Drive folder ID, creating it if it doesn't exist."""
     query = (
         f"name='{folder_name}' and "
         f"'{parent_id}' in parents and "
         f"mimeType='application/vnd.google-apps.folder' and "
         f"trashed=false"
     )
-    results = service.files().list(q=query, fields="files(id, name)").execute()
+    results = execute_with_retry(service.files().list(q=query, fields="files(id, name)"))
     files = results.get("files", [])
     if files:
         return files[0]["id"]
-    
     metadata = {
         "name": folder_name,
         "mimeType": "application/vnd.google-apps.folder",
         "parents": [parent_id]
     }
-    folder = service.files().create(body=metadata, fields="id").execute()
+    folder = execute_with_retry(service.files().create(body=metadata, fields="id"))
     return folder["id"]
 
 def upload_screenshot_to_drive(service, screenshot_bytes, filename, subfolder_id):
@@ -150,7 +161,7 @@ def upload_screenshot_to_drive(service, screenshot_bytes, filename, subfolder_id
         resumable=False
     )
     metadata = {"name": filename, "parents": [subfolder_id]}
-    service.files().create(body=metadata, media_body=media, fields="id").execute()
+    execute_with_retry(service.files().create(body=metadata, media_body=media, fields="id"))
     print(f"Uploaded to Drive: {filename}")
 
 drive_service = get_drive_service()
